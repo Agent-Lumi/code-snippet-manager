@@ -95,3 +95,131 @@ function example() {
     <script src="app.js"></script>
 </body>
 </html>
+
+<!-- Dark Mode Feature -->
+<script>
+// Dark mode toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const darkModeToggle = document.createElement('button');
+    darkModeToggle.id = 'dark-mode-toggle';
+    darkModeToggle.innerHTML = '🌙';
+    darkModeToggle.style.cssText = 'position:fixed;top:20px;right:20px;background:none;border:none;font-size:24px;cursor:pointer;z-index:1000;padding:10px;border-radius:50%;transition:all 0.3s ease;';
+    darkModeToggle.title = 'Toggle dark mode';
+    
+    darkModeToggle.onclick = function() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        darkModeToggle.innerHTML = isDark ? '☀️' : '🌙';
+        localStorage.setItem('darkMode', isDark);
+        updateDarkModeStyles();
+    };
+    
+    document.body.appendChild(darkModeToggle);
+    
+    // Apply saved preference
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        darkModeToggle.innerHTML = '☀️';
+        updateDarkModeStyles();
+    }
+});
+
+function updateDarkModeStyles() {
+    const isDark = document.body.classList.contains('dark-mode');
+    document.querySelectorAll('.snippet-card, header, .modal-content').forEach(el => {
+        el.style.background = isDark ? '#2a2a2a' : '';
+        el.style.color = isDark ? '#e0e0e0' : '';
+    });
+    document.querySelectorAll('input, textarea, select').forEach(el => {
+        el.style.background = isDark ? '#3a3a3a' : '';
+        el.style.color = isDark ? '#e0e0e0' : '';
+        el.style.borderColor = isDark ? '#555' : '';
+    });
+}
+
+// Update styles when switching
+const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        if (mutation.target.classList && mutation.target.classList.contains('dark-mode')) {
+            updateDarkModeStyles();
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+});
+</script>
+
+<style>
+/* Dark mode styles */
+body.dark-mode {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode header {
+    background: rgba(42, 42, 42, 0.95) !important;
+    border-bottom: 1px solid #444 !important;
+}
+
+body.dark-mode .snippet-card {
+    background: #2a2a2a !important;
+    border-color: #444 !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .snippet-card:hover {
+    border-color: #6f42c1 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background: #3a3a3a !important;
+    color: #e0e0e0 !important;
+    border-color: #555 !important;
+}
+
+body.dark-mode .btn {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
+}
+
+body.dark-mode .btn:hover {
+    background: linear-gradient(135deg, #5a32a3 0%, #4a2283 100%) !important;
+}
+
+body.dark-mode .modal-content {
+    background: #2a2a2a !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode code {
+    background: #1a1a1a !important;
+    color: #d4d4d4 !important;
+}
+
+body.dark-mode .stats {
+    background: #2a2a2a !important;
+    border-color: #444 !important;
+}
+
+body.dark-mode .search-box {
+    background: #3a3a3a !important;
+    border-color: #555 !important;
+}
+
+body.dark-mode .snippet-header {
+    border-bottom-color: #444 !important;
+}
+
+body.dark-mode .snippet-meta {
+    color: #999 !important;
+}
+
+/* Smooth transitions */
+body, .snippet-card, header, input, textarea, select, .btn, .modal-content {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+</style>
