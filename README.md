@@ -13,8 +13,15 @@ A beautiful, fully-functional code snippet manager that runs entirely in your br
 - 🔍 **Smart Search** - Search by title, code content, or tags
 - 🏷️ **Language Filtering** - Filter by JavaScript, Python, HTML, CSS, SQL, and more
 - 🌙 **Dark/Light Mode** - Toggle themes with your preference saved
-- ⌨️ **Keyboard Shortcuts** - Ctrl+S to save, Ctrl+N for new snippet, Ctrl+F to search
+- ⌨️ **Keyboard Shortcuts** - Full shortcut support for power users
 - 📋 **Copy to Clipboard** - One-click copying of any snippet
+- 📋 **Duplicate Snippets** - Quickly create copies with Ctrl+D
+
+### NEW: Undo/Redo System 🆕
+- ↩️ **Undo** - Reverse any action (Ctrl+Z)
+- ↪️ **Redo** - Restore undone actions (Ctrl+Y or Ctrl+Shift+Z)
+- 📜 **50 Action History** - Keeps track of up to 50 recent changes
+- 💾 **Persistent** - History is maintained during your session
 
 ### Data Management
 - 💾 **LocalStorage Persistence** - All snippets saved locally in your browser
@@ -26,7 +33,7 @@ A beautiful, fully-functional code snippet manager that runs entirely in your br
 - 📱 **Responsive Design** - Works on desktop, tablet, and mobile
 - ⚡ **Instant Feedback** - Notifications for all actions
 - 🎨 **Clean Interface** - Modern, distraction-free design
-- 🔄 **Auto-save** - Changes are automatically persisted
+- ⌨️ **Keyboard Shortcuts Panel** - Press Shift+Ctrl+/ to see all shortcuts
 
 ## ⌨️ Keyboard Shortcuts
 
@@ -34,7 +41,13 @@ A beautiful, fully-functional code snippet manager that runs entirely in your br
 |----------|--------|
 | `Ctrl/Cmd + S` | Save current snippet |
 | `Ctrl/Cmd + N` | Create new snippet |
+| `Ctrl/Cmd + D` | Duplicate current snippet |
 | `Ctrl/Cmd + F` | Focus search box |
+| `Ctrl/Cmd + Z` | Undo last action |
+| `Ctrl/Cmd + Y` | Redo last undone action |
+| `Ctrl/Cmd + Shift + Z` | Redo (alternative) |
+| `Ctrl/Cmd + Shift + /` | Show keyboard shortcuts |
+| `Esc` | Close any modal |
 
 ## 📦 Usage
 
@@ -74,6 +87,19 @@ None currently! Report any issues [here](https://github.com/Agent-Lumi/code-snip
 
 ## 📝 License
 MIT - Feel free to use, modify, and share!
+
+## 🔄 Changelog
+
+### v1.1.0 - June 13, 2026
+- ✨ Added Undo/Redo functionality with 50-action history
+- ✨ Added Duplicate snippet feature (Ctrl+D)
+- ✨ Added Keyboard Shortcuts help modal (Shift+Ctrl+/)
+- ✨ Added visual undo/redo buttons in the editor
+- ✨ Improved keyboard shortcut coverage
+- ✨ Added keyboard shortcut hints in UI
+
+### v1.0.0
+- Initial release with core snippet management features
 
 ---
 

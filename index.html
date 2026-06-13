@@ -12,7 +12,10 @@
         <header>
             <h1>💡 Code Snippet Manager</h1>
             <p class="subtitle">Save, organize, and search your code snippets</p>
-            <button id="themeToggle" class="theme-toggle" title="Toggle Dark Mode">🌙</button>
+            <div class="header-actions">
+                <button id="shortcutsBtn" class="icon-btn" title="Keyboard Shortcuts (Shift+Ctrl+?)">⌨️</button>
+                <button id="themeToggle" class="theme-toggle" title="Toggle Dark Mode">🌙</button>
+            </div>
         </header>
 
         <div class="app-layout">
@@ -56,15 +59,19 @@ function example() {
     return 'Hello World!';
 }"></textarea>
                 <div class="editor-actions">
-                    <button id="newSnippetBtn" class="secondary">➕ New Snippet</button>
-                    <button id="saveSnippetBtn" class="primary">💾 Save Snippet</button>
-                    <button id="copySnippetBtn" class="secondary">📋 Copy</button>
-                    <button id="deleteSnippetBtn" class="danger">🗑️ Delete</button>
+                    <button id="undoBtn" class="secondary" title="Undo (Ctrl+Z)">↩️ Undo</button>
+                    <button id="redoBtn" class="secondary" title="Redo (Ctrl+Y or Ctrl+Shift+Z)">↪️ Redo</button>
+                    <button id="newSnippetBtn" class="secondary" title="New Snippet (Ctrl+N)">➕ New</button>
+                    <button id="duplicateSnippetBtn" class="secondary" title="Duplicate (Ctrl+D)">📋 Duplicate</button>
+                    <button id="saveSnippetBtn" class="primary" title="Save (Ctrl+S)">💾 Save</button>
+                    <button id="copySnippetBtn" class="secondary" title="Copy to Clipboard">📄 Copy</button>
+                    <button id="deleteSnippetBtn" class="danger" title="Delete Snippet">🗑️ Delete</button>
                 </div>
                 <div class="stats-bar">
                     <span id="charCount">0 chars</span>
                     <span id="lineCount">0 lines</span>
                     <span id="snippetCount">0 snippets</span>
+                    <span class="shortcut-hint">Press Shift+Ctrl+/ for shortcuts</span>
                 </div>
             </main>
         </div>
@@ -82,12 +89,69 @@ function example() {
             </div>
         </div>
 
+        <!-- Keyboard Shortcuts Modal -->
+        <div id="shortcutsModal" class="modal hidden">
+            <div class="modal-content shortcuts-content">
+                <h3>⌨️ Keyboard Shortcuts</h3>
+                <div class="shortcuts-grid">
+                    <div class="shortcut-group">
+                        <h4>Actions</h4>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>S</kbd>
+                            <span>Save snippet</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>N</kbd>
+                            <span>New snippet</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>D</kbd>
+                            <span>Duplicate snippet</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>F</kbd>
+                            <span>Focus search</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-group">
+                        <h4>History</h4>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>Z</kbd>
+                            <span>Undo</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>Y</kbd>
+                            <span>Redo</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd>
+                            <span>Redo (alternative)</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-group">
+                        <h4>General</h4>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>/</kbd>
+                            <span>Show shortcuts</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Esc</kbd>
+                            <span>Close modals</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="closeShortcutsBtn" class="primary">Got it!</button>
+                </div>
+            </div>
+        </div>
+
         <footer>
             <div class="footer-actions">
                 <button id="importExportToggle">📁 Import/Export</button>
                 <button id="clearAllBtn" class="danger">⚠️ Clear All</button>
             </div>
-            <p>Made with 💡 by <a href="https://github.com/Agent-Lumi" target="_blank">Lumi</a></p>
+            <p>Made with 💡 by <a href="https://github.com/Agent-Lumi" target="_blank">Lumi</a> • Now with Undo/Redo!</p>
         </footer>
     </div>
 
@@ -216,6 +280,12 @@ body.dark-mode .snippet-header {
 
 body.dark-mode .snippet-meta {
     color: #999 !important;
+}
+
+body.dark-mode kbd {
+    background: #3a3a3a !important;
+    border-color: #555 !important;
+    color: #e0e0e0 !important;
 }
 
 /* Smooth transitions */

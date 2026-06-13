@@ -5,6 +5,11 @@ let snippets = [];
 let currentSnippetId = null;
 let currentFilter = 'all';
 
+// Undo/Redo history
+let history = [];
+let historyIndex = -1;
+const MAX_HISTORY = 50;
+
 // DOM Elements
 const elements = {
     snippetList: document.getElementById('snippetList'),
@@ -18,13 +23,17 @@ const elements = {
     saveSnippetBtn: document.getElementById('saveSnippetBtn'),
     copySnippetBtn: document.getElementById('copySnippetBtn'),
     deleteSnippetBtn: document.getElementById('deleteSnippetBtn'),
+    duplicateSnippetBtn: document.getElementById('duplicateSnippetBtn'),
     importExportToggle: document.getElementById('importExportToggle'),
     clearAllBtn: document.getElementById('clearAllBtn'),
+    shortcutsBtn: document.getElementById('shortcutsBtn'),
     modal: document.getElementById('modal'),
+    shortcutsModal: document.getElementById('shortcutsModal'),
     importExportArea: document.getElementById('importExportArea'),
     importBtn: document.getElementById('importBtn'),
     exportBtn: document.getElementById('exportBtn'),
     closeModalBtn: document.getElementById('closeModalBtn'),
+    closeShortcutsBtn: document.getElementById('closeShortcutsBtn'),
     notification: document.getElementById('notification'),
     charCount: document.getElementById('charCount'),
     lineCount: document.getElementById('lineCount'),
@@ -46,6 +55,9 @@ function init() {
     } else {
         showEmptyState();
     }
+    
+    // Save initial state to history
+    saveHistory();
 }
 
 // Load snippets from localStorage
@@ -70,6 +82,72 @@ function saveToStorage() {
     }
 }
 
+// History management
+function saveHistory() {
+    // Remove any future history if we're not at the end
+    if (historyIndex < history.length - 1) {
+        history = history.slice(0, historyIndex + 1);
+    }
+    
+    // Add current state to history
+    history.push({
+        snippets: JSON.parse(JSON.stringify(snippets)),
+        currentSnippetId: currentSnippetId
+    });
+    
+    // Limit history size
+    if (history.length > MAX_HISTORY) {
+        history.shift();
+    } else {
+        historyIndex++;
+    }
+    
+    updateUndoRedoButtons();
+}
+
+function undo() {
+    if (historyIndex > 0) {
+        historyIndex--;
+        const state = history[historyIndex];
+        snippets = JSON.parse(JSON.stringify(state.snippets));
+        currentSnippetId = state.currentSnippetId;
+        saveToStorage();
+        renderSnippetList();
+        if (currentSnippetId) {
+            loadSnippet(currentSnippetId);
+        } else {
+            createNewSnippet();
+        }
+        showNotification('Undo', 'info');
+        updateUndoRedoButtons();
+    }
+}
+
+function redo() {
+    if (historyIndex < history.length - 1) {
+        historyIndex++;
+        const state = history[historyIndex];
+        snippets = JSON.parse(JSON.stringify(state.snippets));
+        currentSnippetId = state.currentSnippetId;
+        saveToStorage();
+        renderSnippetList();
+        if (currentSnippetId) {
+            loadSnippet(currentSnippetId);
+        } else {
+            createNewSnippet();
+        }
+        showNotification('Redo', 'info');
+        updateUndoRedoButtons();
+    }
+}
+
+function updateUndoRedoButtons() {
+    const undoBtn = document.getElementById('undoBtn');
+    const redoBtn = document.getElementById('redoBtn');
+    if (undoBtn) undoBtn.disabled = historyIndex <= 0;
+    if (redoBtn) redoBtn.disabled = historyIndex >= history.length - 1;
+}
+
 // Load theme preference
 function loadTheme() {
     const darkMode = localStorage.getItem('darkMode') === 'true';
@@ -89,6 +167,9 @@ function setupEventListeners() {
     elements.saveSnippetBtn.addEventListener('click', saveSnippet);
     elements.copySnippetBtn.addEventListener('click', copySnippet);
     elements.deleteSnippetBtn.addEventListener('click', deleteSnippet);
+    if (elements.duplicateSnippetBtn) {
+        elements.duplicateSnippetBtn.addEventListener('click', duplicateSnippet);
+    }
     
     // Search
     elements.searchInput.addEventListener('input', debounce(renderSnippetList, 150));
@@ -109,6 +190,14 @@ function setupEventListeners() {
     elements.importBtn.addEventListener('click', importSnippets);
     elements.exportBtn.addEventListener('click', exportSnippets);
     
+    // Shortcuts modal
+    if (elements.shortcutsBtn) {
+        elements.shortcutsBtn.addEventListener('click', openShortcutsModal);
+    }
+    if (elements.closeShortcutsBtn) {
+        elements.closeShortcutsBtn.addEventListener('click', closeShortcutsModal);
+    }
+    
     // Clear all
     elements.clearAllBtn.addEventListener('click', clearAllSnippets);
     
@@ -117,6 +206,12 @@ function setupEventListeners() {
     
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyboard);
+    
+    // Close modals on outside click
+    document.addEventListener('click', (e) => {
+        if (e.target === elements.modal) closeModal();
+        if (e.target === elements.shortcutsModal) closeShortcutsModal();
+    });
 }
 
 // Theme toggle
@@ -177,6 +272,7 @@ function saveSnippet() {
     }
     
     saveToStorage();
+    saveHistory();
     renderSnippetList();
     updateStats();
     showNotification('Snippet saved successfully!', 'success');
@@ -215,6 +311,7 @@ function deleteSnippet() {
     
     snippets = snippets.filter(s => s.id !== currentSnippetId);
     saveToStorage();
+    saveHistory();
     
     currentSnippetId = null;
     elements.snippetTitle.value = '';
@@ -231,6 +328,35 @@ function deleteSnippet() {
     } else {
         showEmptyState();
     }
+}
+
+// Duplicate snippet
+function duplicateSnippet() {
+    if (!currentSnippetId) {
+        showNotification('No snippet to duplicate', 'error');
+        return;
+    }
+    
+    const original = snippets.find(s => s.id === currentSnippetId);
+    if (!original) return;
+    
+    const duplicate = {
+        id: Date.now().toString(),
+        title: original.title + ' (Copy)',
+        language: original.language,
+        tags: [...original.tags],
+        code: original.code,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+    
+    snippets.unshift(duplicate);
+    saveToStorage();
+    saveHistory();
+    currentSnippetId = duplicate.id;
+    renderSnippetList();
+    loadSnippet(duplicate.id);
+    showNotification('Snippet duplicated!', 'success');
 }
 
 // Copy snippet
@@ -318,6 +444,14 @@ function closeModal() {
     elements.modal.classList.add('hidden');
 }
 
+function openShortcutsModal() {
+    elements.shortcutsModal.classList.remove('hidden');
+}
+
+function closeShortcutsModal() {
+    elements.shortcutsModal.classList.add('hidden');
+}
+
 // Import snippets
 function importSnippets() {
     const json = elements.importExportArea.value.trim();
@@ -331,6 +465,7 @@ function importSnippets() {
         if (Array.isArray(imported)) {
             snippets = [...imported, ...snippets];
             saveToStorage();
+            saveHistory();
             renderSnippetList();
             updateStats();
             closeModal();
@@ -338,6 +473,7 @@ function importSnippets() {
         } else if (imported.id) {
             snippets.unshift(imported);
             saveToStorage();
+            saveHistory();
             renderSnippetList();
             updateStats();
             closeModal();
@@ -379,6 +515,7 @@ function clearAllSnippets() {
     snippets = [];
     currentSnippetId = null;
     saveToStorage();
+    saveHistory();
     
     elements.snippetTitle.value = '';
     elements.snippetLanguage.value = 'javascript';
@@ -407,7 +544,35 @@ function handleKeyboard(e) {
                 e.preventDefault();
                 elements.searchInput.focus();
                 break;
+            case 'd':
+                e.preventDefault();
+                duplicateSnippet();
+                break;
+            case 'z':
+                e.preventDefault();
+                if (e.shiftKey) {
+                    redo();
+                } else {
+                    undo();
+                }
+                break;
+            case 'y':
+                e.preventDefault();
+                redo();
+                break;
+            case '/':
+                e.preventDefault();
+                if (e.shiftKey) {
+                    openShortcutsModal();
+                }
+                break;
         }
+    }
+    
+    // Escape to close modals
+    if (e.key === 'Escape') {
+        closeModal();
+        closeShortcutsModal();
     }
 }
 
