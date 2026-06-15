@@ -10,6 +10,108 @@ let history = [];
 let historyIndex = -1;
 const MAX_HISTORY = 50;
 
+// Notification Manager
+const NotificationManager = {
+    enabled: false,
+    permission: 'default',
+    
+    init() {
+        if ('Notification' in window) {
+            this.permission = Notification.permission;
+            if (this.permission === 'granted') {
+                this.enabled = true;
+            }
+        }
+    },
+    
+    async requestPermission() {
+        if (!('Notification' in window)) {
+            console.log('Notifications not supported');
+            return false;
+        }
+        
+        try {
+            const result = await Notification.requestPermission();
+            this.permission = result;
+            this.enabled = result === 'granted';
+            return this.enabled;
+        } catch (e) {
+            console.error('Notification permission error:', e);
+            return false;
+        }
+    },
+    
+    notify(title, body, options = {}) {
+        if (!this.enabled || this.permission !== 'granted') return;
+        
+        try {
+            const notification = new Notification(title, {
+                body,
+                icon: '💡',
+                badge: '💡',
+                tag: options.tag || 'code-snippet-manager',
+                requireInteraction: options.requireInteraction || false,
+                silent: options.silent || false,
+                ...options
+            });
+            
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+                if (options.onClick) options.onClick();
+            };
+            
+            // Auto-close after 5 seconds unless requireInteraction is true
+            if (!options.requireInteraction) {
+                setTimeout(() => notification.close(), 5000);
+            }
+            
+            return notification;
+        } catch (e) {
+            console.error('Notification error:', e);
+        }
+    },
+    
+    notifySnippetSaved(snippet) {
+        this.notify(
+            'Snippet Saved!',
+            `"${snippet.title}" has been saved successfully.`,
+            { tag: 'snippet-saved' }
+        );
+    },
+    
+    notifySnippetDeleted(title) {
+        this.notify(
+            'Snippet Deleted',
+            `"${title}" has been deleted.`,
+            { tag: 'snippet-deleted' }
+        );
+    },
+    
+    notifyDailyReminder(count) {
+        this.notify(
+            'Snippet Manager',
+            `You have ${count} snippets. Keep coding! 💪`,
+            { 
+                tag: 'daily-reminder',
+                requireInteraction: false,
+                silent: true
+            }
+        );
+    },
+    
+    notifyBackupReminder() {
+        this.notify(
+            '💾 Backup Reminder',
+            'It\'s been a while since you exported your snippets. Keep them safe!',
+            { 
+                tag: 'backup-reminder',
+                requireInteraction: true
+            }
+        );
+    }
+};
+
 // DOM Elements
 const elements = {
     snippetList: document.getElementById('snippetList'),
@@ -45,6 +147,7 @@ const elements = {
 function init() {
     loadSnippets();
     loadTheme();
+    NotificationManager.init();
     setupEventListeners();
     renderSnippetList();
     updateStats();
@@ -58,6 +161,9 @@ function init() {
     
     // Save initial state to history
     saveHistory();
+    
+    // Setup notification features
+    setupNotificationFeatures();
 }
 
 // Load snippets from localStorage
@@ -198,6 +304,26 @@ function setupEventListeners() {
         elements.closeShortcutsBtn.addEventListener('click', closeShortcutsModal);
     }
     
+    // Notification button
+    const notificationBtn = document.getElementById('notificationBtn');
+    if (notificationBtn) {
+        notificationBtn.style.display = NotificationManager.permission === 'default' ? 'block' : 'none';
+        notificationBtn.addEventListener('click', async () => {
+            const granted = await NotificationManager.requestPermission();
+            if (granted) {
+                notificationBtn.style.display = 'none';
+                showNotification('Notifications enabled!', 'success');
+                NotificationManager.notify(
+                    'Code Snippet Manager',
+                    'Notifications are now enabled. You\'ll get updates on saves and daily reminders!',
+                    { requireInteraction: false }
+                );
+            } else {
+                showNotification('Notification permission denied', 'error');
+            }
+        });
+    }
+    
     // Clear all
     elements.clearAllBtn.addEventListener('click', clearAllSnippets);
     
@@ -276,6 +402,9 @@ function saveSnippet() {
     renderSnippetList();
     updateStats();
     showNotification('Snippet saved successfully!', 'success');
+    
+    // Browser notification
+    NotificationManager.notifySnippetSaved(snippet);
 }
 
 // Load snippet
@@ -307,6 +436,9 @@ function deleteSnippet() {
         return;
     }
     
+    const snippet = snippets.find(s => s.id === currentSnippetId);
+    const snippetTitle = snippet ? snippet.title : 'Snippet';
+    
     if (!confirm('Are you sure you want to delete this snippet?')) return;
     
     snippets = snippets.filter(s => s.id !== currentSnippetId);
@@ -322,6 +454,9 @@ function deleteSnippet() {
     renderSnippetList();
     updateStats();
     showNotification('Snippet deleted', 'info');
+    
+    // Browser notification
+    NotificationManager.notifySnippetDeleted(snippetTitle);
     
     if (snippets.length > 0) {
         loadSnippet(snippets[0].id);
@@ -505,6 +640,9 @@ function exportSnippets() {
     a.click();
     URL.revokeObjectURL(url);
     
+    // Track export date for backup reminder
+    localStorage.setItem('lastExportDate', Date.now().toString());
+    
     showNotification('Exported and downloaded!', 'success');
 }
 
@@ -584,6 +722,45 @@ function showNotification(message, type = 'success') {
     setTimeout(() => {
         elements.notification.classList.add('hidden');
     }, 3000);
+}
+
+// Setup notification features
+function setupNotificationFeatures() {
+    // Request permission on first save attempt if not already granted
+    const originalSave = saveSnippet;
+    saveSnippet = function() {
+        if (NotificationManager.permission === 'default') {
+            NotificationManager.requestPermission().then(granted => {
+                if (granted) {
+                    console.log('Notifications enabled!');
+                }
+            });
+        }
+        return originalSave.apply(this, arguments);
+    };
+    
+    // Daily reminder (check every hour)
+    setInterval(() => {
+        const lastReminder = localStorage.getItem('lastDailyReminder');
+        const now = new Date();
+        const today = now.toDateString();
+        
+        if (lastReminder !== today && snippets.length > 0) {
+            NotificationManager.notifyDailyReminder(snippets.length);
+            localStorage.setItem('lastDailyReminder', today);
+        }
+    }, 3600000); // Check every hour
+    
+    // Backup reminder (every 7 days)
+    setInterval(() => {
+        const lastExport = localStorage.getItem('lastExportDate');
+        if (lastExport) {
+            const daysSinceExport = (Date.now() - parseInt(lastExport)) / (1000 * 60 * 60 * 24);
+            if (daysSinceExport >= 7 && snippets.length > 5) {
+                NotificationManager.notifyBackupReminder();
+            }
+        }
+    }, 86400000); // Check once per day
 }
 
 // Utility functions
