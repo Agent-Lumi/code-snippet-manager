@@ -14,6 +14,7 @@
             <p class="subtitle">Save, organize, and search your code snippets</p>
             <div class="header-actions">
                 <button id="notificationBtn" class="icon-btn" title="Enable Notifications (Bell)" style="display:none;">🔔</button>
+                <button id="statsBtn" class="icon-btn" title="Statistics Dashboard 📊">📊</button>
                 <button id="shortcutsBtn" class="icon-btn" title="Keyboard Shortcuts (Shift+Ctrl+?)">⌨️</button>
                 <button id="themeToggle" class="theme-toggle" title="Toggle Dark Mode">🌙</button>
             </div>
@@ -136,6 +137,10 @@ function example() {
                             <span>Show shortcuts</span>
                         </div>
                         <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd>
+                            <span>Show statistics</span>
+                        </div>
+                        <div class="shortcut-item">
                             <kbd>Esc</kbd>
                             <span>Close modals</span>
                         </div>
@@ -143,6 +148,62 @@ function example() {
                 </div>
                 <div class="modal-actions">
                     <button id="closeShortcutsBtn" class="primary">Got it!</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Modal -->
+        <div id="statsModal" class="modal hidden">
+            <div class="modal-content stats-content">
+                <h3>📊 Statistics Dashboard</h3>
+                <div class="stats-grid">
+                    <div class="stat-card total-snippets">
+                        <span class="stat-icon">📝</span>
+                        <span class="stat-value" id="statTotalSnippets">0</span>
+                        <span class="stat-label">Total Snippets</span>
+                    </div>
+                    <div class="stat-card total-chars">
+                        <span class="stat-icon">📊</span>
+                        <span class="stat-value" id="statTotalChars">0</span>
+                        <span class="stat-label">Total Characters</span>
+                    </div>
+                    <div class="stat-card avg-length">
+                        <span class="stat-icon">📏</span>
+                        <span class="stat-value" id="statAvgLength">0</span>
+                        <span class="stat-label">Avg. Snippet Length</span>
+                    </div>
+                    <div class="stat-card languages">
+                        <span class="stat-icon">💻</span>
+                        <span class="stat-value" id="statLanguages">0</span>
+                        <span class="stat-label">Languages Used</span>
+                    </div>
+                </div>
+                
+                <div class="stats-sections">
+                    <div class="stats-section">
+                        <h4>🎨 Snippets by Language</h4>
+                        <div id="languageChart" class="chart-container">
+                            <!-- Language bars will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <div class="stats-section">
+                        <h4>🏷️ Top Tags</h4>
+                        <div id="tagsCloud" class="tags-cloud">
+                            <!-- Tag badges will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <div class="stats-section">
+                        <h4>📈 Activity Timeline</h4>
+                        <div id="activityChart" class="activity-chart">
+                            <!-- Activity bars will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button id="closeStatsBtn" class="primary">Close</button>
                 </div>
             </div>
         </div>

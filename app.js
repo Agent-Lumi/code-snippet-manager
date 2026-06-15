@@ -129,13 +129,16 @@ const elements = {
     importExportToggle: document.getElementById('importExportToggle'),
     clearAllBtn: document.getElementById('clearAllBtn'),
     shortcutsBtn: document.getElementById('shortcutsBtn'),
+    statsBtn: document.getElementById('statsBtn'),
     modal: document.getElementById('modal'),
     shortcutsModal: document.getElementById('shortcutsModal'),
+    statsModal: document.getElementById('statsModal'),
     importExportArea: document.getElementById('importExportArea'),
     importBtn: document.getElementById('importBtn'),
     exportBtn: document.getElementById('exportBtn'),
     closeModalBtn: document.getElementById('closeModalBtn'),
     closeShortcutsBtn: document.getElementById('closeShortcutsBtn'),
+    closeStatsBtn: document.getElementById('closeStatsBtn'),
     notification: document.getElementById('notification'),
     charCount: document.getElementById('charCount'),
     lineCount: document.getElementById('lineCount'),
@@ -304,6 +307,14 @@ function setupEventListeners() {
         elements.closeShortcutsBtn.addEventListener('click', closeShortcutsModal);
     }
     
+    // Stats modal
+    if (elements.statsBtn) {
+        elements.statsBtn.addEventListener('click', openStatsModal);
+    }
+    if (elements.closeStatsBtn) {
+        elements.closeStatsBtn.addEventListener('click', closeStatsModal);
+    }
+    
     // Notification button
     const notificationBtn = document.getElementById('notificationBtn');
     if (notificationBtn) {
@@ -337,6 +348,7 @@ function setupEventListeners() {
     document.addEventListener('click', (e) => {
         if (e.target === elements.modal) closeModal();
         if (e.target === elements.shortcutsModal) closeShortcutsModal();
+        if (e.target === elements.statsModal) closeStatsModal();
     });
 }
 
@@ -587,6 +599,133 @@ function closeShortcutsModal() {
     elements.shortcutsModal.classList.add('hidden');
 }
 
+// Statistics Modal functions
+function openStatsModal() {
+    elements.statsModal.classList.remove('hidden');
+    renderStatistics();
+}
+
+function closeStatsModal() {
+    elements.statsModal.classList.add('hidden');
+}
+
+// Render Statistics Dashboard
+function renderStatistics() {
+    if (snippets.length === 0) {
+        document.getElementById('statTotalSnippets').textContent = '0';
+        document.getElementById('statTotalChars').textContent = '0';
+        document.getElementById('statAvgLength').textContent = '0';
+        document.getElementById('statLanguages').textContent = '0';
+        document.getElementById('languageChart').innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No data available yet</p>';
+        document.getElementById('tagsCloud').innerHTML = '<p style="color: var(--text-secondary);">No tags yet</p>';
+        document.getElementById('activityChart').innerHTML = '<p style="color: var(--text-secondary);">No activity yet</p>';
+        return;
+    }
+    
+    // Calculate statistics
+    const totalSnippets = snippets.length;
+    const totalChars = snippets.reduce((sum, s) => sum + s.code.length, 0);
+    const avgLength = Math.round(totalChars / totalSnippets);
+    
+    // Count by language
+    const languageCounts = {};
+    snippets.forEach(s => {
+        languageCounts[s.language] = (languageCounts[s.language] || 0) + 1;
+    });
+    const languagesUsed = Object.keys(languageCounts).length;
+    
+    // Count tags
+    const tagCounts = {};
+    snippets.forEach(s => {
+        s.tags.forEach(tag => {
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+    });
+    
+    // Activity by date (last 7 days)
+    const activityData = {};
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        activityData[key] = { date: key, display: d.toLocaleDateString('en', { weekday: 'short' }), count: 0 };
+    }
+    
+    snippets.forEach(s => {
+        const date = s.createdAt.split('T')[0];
+        if (activityData[date]) {
+            activityData[date].count++;
+        }
+    });
+    
+    // Update stat cards
+    document.getElementById('statTotalSnippets').textContent = totalSnippets.toLocaleString();
+    document.getElementById('statTotalChars').textContent = totalChars.toLocaleString();
+    document.getElementById('statAvgLength').textContent = avgLength.toLocaleString();
+    document.getElementById('statLanguages').textContent = languagesUsed;
+    
+    // Render language chart
+    const sortedLanguages = Object.entries(languageCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+    
+    const maxCount = sortedLanguages[0][1];
+    
+    document.getElementById('languageChart').innerHTML = sortedLanguages.map(([lang, count]) => {
+        const percentage = (count / totalSnippets) * 100;
+        const width = (count / maxCount) * 100;
+        return `
+            <div class="language-bar">
+                <span class="language-label">${lang}</span>
+                <div class="language-progress">
+                    <div class="language-fill lang-${lang}" style="width: ${width}%">
+                        <span>${count}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Render tags cloud
+    const sortedTags = Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 15);
+    
+    const tagColors = [
+        'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+        'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+        'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+        'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+        'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+        'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)'
+    ];
+    
+    document.getElementById('tagsCloud').innerHTML = sortedTags.map(([tag, count], i) => `
+        <span class="tag-badge" style="background: ${tagColors[i % tagColors.length]}; color: white;">
+            <span class="tag-name">${escapeHtml(tag)}</span>
+            <span class="tag-count">${count}</span>
+        </span>
+    `).join('');
+    
+    // Render activity chart
+    const activityValues = Object.values(activityData);
+    const maxActivity = Math.max(...activityValues.map(a => a.count), 1);
+    
+    document.getElementById('activityChart').innerHTML = activityValues.map(day => {
+        const height = day.count > 0 ? (day.count / maxActivity) * 100 : 5;
+        const opacity = day.count > 0 ? 0.5 + (day.count / maxActivity) * 0.5 : 0.2;
+        return `
+            <div class="activity-bar-wrapper">
+                <div class="activity-bar" style="height: ${height}%; opacity: ${opacity}" data-count="${day.count} snippet${day.count !== 1 ? 's' : ''}"></div>
+                <span class="activity-label">${day.display}</span>
+            </div>
+        `;
+    }).join('');
+}
+
 // Import snippets
 function importSnippets() {
     const json = elements.importExportArea.value.trim();
@@ -707,10 +846,17 @@ function handleKeyboard(e) {
         }
     }
     
+    // Ctrl+Shift+S for stats
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        openStatsModal();
+    }
+    
     // Escape to close modals
     if (e.key === 'Escape') {
         closeModal();
         closeShortcutsModal();
+        closeStatsModal();
     }
 }
 

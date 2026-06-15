@@ -17,11 +17,20 @@ A beautiful, fully-functional code snippet manager that runs entirely in your br
 - 📋 **Copy to Clipboard** - One-click copying of any snippet
 - 📋 **Duplicate Snippets** - Quickly create copies with Ctrl+D
 
-### NEW: Undo/Redo System 🆕
+### Undo/Redo System
 - ↩️ **Undo** - Reverse any action (Ctrl+Z)
 - ↪️ **Redo** - Restore undone actions (Ctrl+Y or Ctrl+Shift+Z)
 - 📜 **50 Action History** - Keeps track of up to 50 recent changes
 - 💾 **Persistent** - History is maintained during your session
+
+### Statistics Dashboard 📊 NEW!
+- 📊 **Total Snippets** - Track how many snippets you've saved
+- 📈 **Character Count** - See total characters across all snippets
+- 📏 **Average Length** - Average snippet size metric
+- 💻 **Language Distribution** - Visual bar chart of languages used
+- 🏷️ **Tag Cloud** - Most used tags with counts
+- 📅 **Activity Timeline** - Last 7 days of snippet creation activity
+- ⌨️ **Keyboard Access** - Open stats with Ctrl+Shift+S
 
 ### Data Management
 - 💾 **LocalStorage Persistence** - All snippets saved locally in your browser
@@ -47,6 +56,7 @@ A beautiful, fully-functional code snippet manager that runs entirely in your br
 | `Ctrl/Cmd + Y` | Redo last undone action |
 | `Ctrl/Cmd + Shift + Z` | Redo (alternative) |
 | `Ctrl/Cmd + Shift + /` | Show keyboard shortcuts |
+| `Ctrl/Cmd + Shift + S` | Show statistics dashboard |
 | `Esc` | Close any modal |
 
 ## 📦 Usage
@@ -89,6 +99,14 @@ None currently! Report any issues [here](https://github.com/Agent-Lumi/code-snip
 MIT - Feel free to use, modify, and share!
 
 ## 🔄 Changelog
+
+### v1.2.0 - June 15, 2026
+- ✨ Added Statistics Dashboard with 4 key metrics
+- ✨ Added Language Distribution bar chart
+- ✨ Added Tags Cloud visualization
+- ✨ Added 7-day Activity Timeline
+- ✨ Added Statistics shortcut (Ctrl+Shift+S)
+- ✨ Added Stats button to header
 
 ### v1.1.0 - June 13, 2026
 - ✨ Added Undo/Redo functionality with 50-action history
